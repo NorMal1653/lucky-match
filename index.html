@@ -117,27 +117,41 @@ function updateUI(actionText){
     drawCards();
 }
 
-function flashAndRemove(matchedValue, callback){
-    if(animating) return;
-    animating=true;
-    let flashes=0;
-    const frames = Array.from(document.getElementById("cards").children)
-        .filter(div => {
-            const img = div.querySelector("img");
-            return parseInt(img.src.match(/(\d+)\.png$/)[1])===matchedValue;
-        }).slice(0,2);
-    function flashCycle(){
-        if(flashes>=3){
-            gameArea = gameArea.filter(c => c.v!==matchedValue || (c.v===matchedValue && (frames.pop(),false)));
-            animating=false;
+function flashAndRemove(matchedValue, callback) {
+    if (animating) return;
+    animating = true;
+    let flashes = 0;
+
+    // 找出要闪烁的前两张牌的索引
+    const cardDivs = Array.from(document.getElementById("cards").children);
+    const indicesToRemove = [];
+    for (let i = 0; i < gameArea.length && indicesToRemove.length < 2; i++) {
+        if (gameArea[i].v === matchedValue) indicesToRemove.push(i);
+    }
+
+    function flashCycle() {
+        if (flashes >= 3) {
+            // 移除前两张牌
+            // 从后往前删除，避免索引错位
+            for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+                gameArea.splice(indicesToRemove[i], 1);
+            }
+            animating = false;
             updateUI(`匹配成功：${matchedValue}，得分 +1，补牌机会 +1`);
             callback();
             return;
         }
-        frames.forEach(f=>f.style.borderColor=f.style.borderColor==="#ffcc00"?"#000000":"#ffcc00");
+
+        // 闪烁效果
+        indicesToRemove.forEach(idx => {
+            const div = cardDivs[idx];
+            div.style.borderColor = div.style.borderColor === "#ffcc00" ? "#000000" : "#ffcc00";
+        });
+
         flashes++;
         setTimeout(flashCycle, 300);
     }
+
     flashCycle();
 }
 
@@ -220,4 +234,4 @@ window.onload = function(){
 </script>
 
 </body>
-</html>修改主页面使其适配手机以及电脑 
+</html>
